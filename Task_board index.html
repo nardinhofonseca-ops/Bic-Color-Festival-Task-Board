@@ -1,0 +1,503 @@
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ken Art Studios — Task Board</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#19366D;--blue:#00B5FA;--lblue:#8ADEFF;
+  --bg:#F0F4FF;--surface:#fff;--border:#DDE5F4;
+  --text:#12103A;--muted:#6B7A99;--radius:14px;
+  --green:#00875A;--greenl:#E3F5EE;
+  --red:#E24B4A;--redl:#FCEBEB;
+  --purple:#6B35E8;--purplel:#EEEDFE;
+  --orange:#F59E0B;--orangel:#FEF3C7;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* ── TOP BAR ── */
+.topbar{background:var(--navy);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.brand{font-size:15px;font-weight:800;color:#fff;letter-spacing:-0.3px;}
+.brand span{color:var(--blue);}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.presence-row{display:none;align-items:center;gap:6px;}
+.presence-dot{width:8px;height:8px;border-radius:50%;background:#22C55E;}
+.presence-name{font-size:11px;color:rgba(255,255,255,0.55);font-weight:500;}
+.lang-btn{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.7);font-size:11px;font-weight:600;padding:5px 10px;border-radius:20px;cursor:pointer;font-family:inherit;}
+.user-chip{background:var(--blue);color:#fff;font-size:11px;font-weight:700;padding:5px 14px;border-radius:20px;}
+
+/* ── LOGIN ── */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+.login-card{background:#fff;border:1px solid var(--border);border-radius:20px;padding:40px 36px;width:100%;max-width:380px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.06);}
+.login-logo{font-size:20px;font-weight:800;color:var(--navy);margin-bottom:6px;}
+.login-logo span{color:var(--blue);}
+.login-sub{font-size:13px;color:var(--muted);margin-bottom:28px;}
+.login-label{font-size:12px;font-weight:600;color:var(--muted);text-align:left;margin-bottom:6px;display:block;}
+.login-input{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;font-family:inherit;font-size:14px;color:var(--text);outline:none;margin-bottom:14px;transition:border .2s;}
+.login-input:focus{border-color:var(--blue);}
+.login-btn{width:100%;background:var(--navy);color:#fff;border:none;border-radius:12px;padding:13px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:background .2s;}
+.login-btn:hover{background:#1e4080;}
+.login-error{font-size:12px;color:var(--red);margin-top:8px;display:none;}
+
+/* ── MAIN ── */
+.main{max-width:960px;margin:0 auto;padding:24px 20px;display:none;}
+
+/* ── STATS ── */
+.stats-bar{display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap;}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 16px;flex:1;min-width:90px;}
+.stat-num{font-size:22px;font-weight:800;color:var(--navy);}
+.stat-label{font-size:11px;color:var(--muted);font-weight:500;margin-top:1px;}
+
+/* ── FILTERS ── */
+.filters{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.filter-btn{background:var(--surface);border:1.5px solid var(--border);color:var(--muted);font-size:12px;font-weight:600;padding:6px 14px;border-radius:20px;cursor:pointer;font-family:inherit;transition:all .2s;}
+.filter-btn.active{background:var(--navy);border-color:var(--navy);color:#fff;}
+
+/* ── ADD BAR ── */
+.add-bar{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:12px 14px;display:flex;gap:8px;align-items:center;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.04);flex-wrap:wrap;}
+.add-input{flex:1;min-width:140px;border:none;outline:none;font-family:inherit;font-size:14px;color:var(--text);background:transparent;}
+.add-input::placeholder{color:var(--muted);}
+.add-select{border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-family:inherit;font-size:12px;color:var(--text);background:#f8faff;outline:none;cursor:pointer;}
+.add-btn{background:var(--navy);color:#fff;border:none;border-radius:10px;padding:9px 16px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.add-btn:hover{background:#1e4080;}
+
+/* ── COLUMNS ── */
+.columns{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:580px){.columns{grid-template-columns:1fr;}}
+.col{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.04);}
+.col-header{padding:14px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
+.col-title{font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.col-dot{width:10px;height:10px;border-radius:50%;}
+.col-dot.motion{background:var(--purple);}
+.col-dot.static{background:var(--blue);}
+.col-dot.other{background:var(--orange);}
+.col-count{background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:2px 9px;font-size:11px;font-weight:600;color:var(--muted);}
+
+/* ── TASK ITEMS ── */
+.tasks-list{padding:8px;}
+.task-item{display:flex;align-items:flex-start;gap:10px;padding:10px;border-radius:10px;transition:background .15s;position:relative;}
+.task-item:hover{background:#f5f8ff;}
+.task-item.done .task-name{text-decoration:line-through;color:var(--muted);}
+.task-item.done{opacity:0.55;}
+.task-check{width:18px;height:18px;border-radius:5px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;margin-top:2px;transition:all .15s;background:#fff;}
+.task-check:hover{border-color:var(--blue);}
+.task-check.checked{background:var(--green);border-color:var(--green);}
+.task-check.checked::after{content:'✓';font-size:11px;color:#fff;font-weight:700;line-height:1;}
+.task-body{flex:1;min-width:0;}
+.task-name{font-size:13px;font-weight:500;line-height:1.4;}
+.task-meta{display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap;}
+.priority-tag{font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;}
+.priority-tag.high{background:var(--redl);color:var(--red);}
+.priority-tag.normal{background:var(--bg);color:var(--muted);}
+.done-meta{font-size:10px;color:var(--muted);}
+.task-del{opacity:0;position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:4px 6px;border-radius:6px;transition:all .15s;}
+.task-item:hover .task-del{opacity:1;}
+.task-del:hover{background:var(--redl);color:var(--red);}
+.empty-state{padding:28px 16px;text-align:center;color:var(--muted);font-size:13px;}
+
+/* ── NOTIFICATIONS ── */
+.notif-stack{position:fixed;top:66px;right:14px;display:flex;flex-direction:column;gap:8px;z-index:400;pointer-events:none;max-width:300px;}
+.notif{background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:12px 14px;display:flex;align-items:flex-start;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,0.1);transform:translateX(320px);opacity:0;transition:all .35s cubic-bezier(.34,1.56,.64,1);pointer-events:all;}
+.notif.show{transform:translateX(0);opacity:1;}
+.notif-icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px;}
+.notif-icon.done{background:var(--greenl);}
+.notif-icon.add{background:#EEF5FF;}
+.notif-icon.del{background:var(--redl);}
+.notif-icon.reopen{background:var(--orangel);}
+.notif-body{flex:1;min-width:0;}
+.notif-who{font-size:11px;font-weight:700;color:var(--navy);margin-bottom:2px;}
+.notif-msg{font-size:11.5px;color:var(--muted);line-height:1.4;}
+.notif-task{color:var(--text);font-weight:600;}
+.notif-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:0;flex-shrink:0;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:22px;right:22px;background:var(--navy);color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;transform:translateY(80px);opacity:0;transition:all .3s;z-index:500;pointer-events:none;}
+.toast.show{transform:translateY(0);opacity:1;}
+
+/* ── LOADING ── */
+.loading{position:fixed;inset:0;background:rgba(255,255,255,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;z-index:600;}
+.spinner{width:30px;height:30px;border:3px solid var(--border);border-top-color:var(--navy);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+
+<!-- Loading -->
+<div class="loading" id="loading">
+  <div class="spinner"></div>
+  <div style="font-size:13px;color:#6B7A99;font-weight:500;" id="loadingMsg">A carregar...</div>
+</div>
+
+<!-- Login -->
+<div class="login-wrap" id="loginWrap" style="display:none;">
+  <div class="login-card">
+    <div class="login-logo">Ken Art <span>Studios</span></div>
+    <div class="login-sub" id="loginSub">Task Board — Entre para continuar</div>
+    <label class="login-label" id="nameLabel">O teu nome</label>
+    <input class="login-input" id="nameInput" placeholder="ex: Leonardo" maxlength="30">
+    <label class="login-label">PIN de acesso</label>
+    <input class="login-input" id="pinInput" type="password" placeholder="••••" maxlength="10">
+    <button class="login-btn" onclick="doLogin()" id="loginBtn">Entrar</button>
+    <div class="login-error" id="loginError">PIN incorreto. Tenta novamente.</div>
+  </div>
+</div>
+
+<!-- Top bar -->
+<div class="topbar" id="topbar" style="display:none;">
+  <div class="brand">Ken Art <span>Studios</span></div>
+  <div class="topbar-right">
+    <div class="presence-row" id="presenceRow">
+      <div class="presence-dot"></div>
+      <span class="presence-name" id="presenceName"></span>
+    </div>
+    <button class="lang-btn" onclick="toggleLang()">EN / PT</button>
+    <div class="user-chip" id="userChip">—</div>
+  </div>
+</div>
+
+<!-- Notif stack -->
+<div class="notif-stack" id="notifStack"></div>
+
+<!-- Main -->
+<div class="main" id="mainArea">
+  <div class="stats-bar">
+    <div class="stat"><div class="stat-num" id="statTotal">0</div><div class="stat-label" id="lblTotal">Total</div></div>
+    <div class="stat"><div class="stat-num" id="statDone">0</div><div class="stat-label" id="lblDone">Feitas</div></div>
+    <div class="stat"><div class="stat-num" id="statPriority">0</div><div class="stat-label" id="lblPriority">Prioritárias</div></div>
+    <div class="stat"><div class="stat-num" id="statOnline">1</div><div class="stat-label" id="lblOnline">Online</div></div>
+  </div>
+  <div class="filters">
+    <button class="filter-btn active" onclick="setFilter('all',this)" id="fAll">Todas</button>
+    <button class="filter-btn" onclick="setFilter('pending',this)" id="fPending">Por fazer</button>
+    <button class="filter-btn" onclick="setFilter('done',this)" id="fDone">Feitas</button>
+    <button class="filter-btn" onclick="setFilter('high',this)" id="fHigh">Prioritárias</button>
+  </div>
+  <div class="add-bar">
+    <input class="add-input" id="addInput" placeholder="Nova tarefa..." maxlength="120">
+    <select class="add-select" id="addCat">
+      <option value="motion">Motion</option>
+      <option value="static">Estático</option>
+      <option value="other">Outro</option>
+    </select>
+    <select class="add-select" id="addPri">
+      <option value="high">Prioridade</option>
+      <option value="normal">Normal</option>
+    </select>
+    <select class="add-select" id="addProject">
+      <option value="BIC Color Festival">BIC Color Festival</option>
+      <option value="Ken Art Studios">Ken Art Studios</option>
+      <option value="">Sem projecto</option>
+    </select>
+    <button class="add-btn" onclick="addTask()" id="addBtn">+ Adicionar</button>
+  </div>
+  <div class="columns">
+    <div class="col">
+      <div class="col-header">
+        <div class="col-title"><span class="col-dot motion"></span>Motion</div>
+        <span class="col-count" id="cntMotion">0</span>
+      </div>
+      <div class="tasks-list" id="listMotion"></div>
+    </div>
+    <div class="col">
+      <div class="col-header">
+        <div class="col-title"><span class="col-dot static"></span><span id="lblStatic">Estático</span></div>
+        <span class="col-count" id="cntStatic">0</span>
+      </div>
+      <div class="tasks-list" id="listStatic"></div>
+    </div>
+  </div>
+  <div class="col" style="margin-top:16px;display:none;" id="colOther">
+    <div class="col-header">
+      <div class="col-title"><span class="col-dot other"></span><span id="lblOther">Outros</span></div>
+      <span class="col-count" id="cntOther">0</span>
+    </div>
+    <div class="tasks-list" id="listOther"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Firebase SDKs -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, onValue, remove, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD4bJhbcWmnDxcv5WdQAFxOKV6LKu0iGpo",
+  authDomain: "ken-art-taskboard.firebaseapp.com",
+  databaseURL: "https://ken-art-taskboard-default-rtdb.firebaseio.com",
+  projectId: "ken-art-taskboard",
+  storageBucket: "ken-art-taskboard.firebasestorage.app",
+  messagingSenderId: "455943170395",
+  appId: "1:455943170395:web:b6b3ef2eb3e1ce76bf927e"
+};
+
+const app   = initializeApp(firebaseConfig);
+const db    = getDatabase(app);
+
+// ── CONFIG ──────────────────────────────────────────────────
+const USERS = {
+  'leonardo': { pin:'ken2024', name:'Leonardo', short:'LB' },
+  'supaboy':  { pin:'supa2024', name:'Supa Boy', short:'SB' },
+};
+
+const SEEDS = [
+  {name:'Frame de confirmação — People',      cat:'motion', priority:'high',   project:'BIC Color Festival'},
+  {name:'Frame de confirmação — Cantores',    cat:'motion', priority:'high',   project:'BIC Color Festival'},
+  {name:'Countdown — 10, 7 e 3 dias',         cat:'motion', priority:'normal', project:'BIC Color Festival'},
+  {name:'BIC COLOR FESTIVAL Edition',          cat:'motion', priority:'normal', project:'BIC Color Festival'},
+  {name:'Template COLOR RUN',                  cat:'motion', priority:'normal', project:'BIC Color Festival'},
+  {name:'Compra de ticket — UZEKA & BIC Net',  cat:'static', priority:'high',   project:'BIC Color Festival'},
+  {name:'Template Dress Code',                 cat:'static', priority:'high',   project:'BIC Color Festival'},
+  {name:'Regras do festival',                  cat:'static', priority:'high',   project:'BIC Color Festival'},
+  {name:'Template Lyrics Song Spotify',        cat:'static', priority:'high',   project:'BIC Color Festival'},
+  {name:'Template de fotos',                   cat:'static', priority:'high',   project:'BIC Color Festival'},
+  {name:'Local Map',                           cat:'static', priority:'normal', project:'BIC Color Festival'},
+  {name:'Quem és tu no festival?',             cat:'static', priority:'normal', project:'BIC Color Festival'},
+];
+
+// ── STATE ───────────────────────────────────────────────────
+let myUser = null, myKey = null;
+let tasks  = {};
+let filter = 'all';
+let lang   = 'pt';
+let notifCount = 0;
+
+// ── HELPERS ─────────────────────────────────────────────────
+function esc(s){ const d=document.createElement('div');d.textContent=s||'';return d.innerHTML; }
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+function showNotif(type,who,taskName){
+  if(!who||who===myUser?.name) return;
+  const icons={done:'✅',add:'➕',del:'🗑️',reopen:'↺'};
+  const ptMsg={done:'marcou como concluída:',add:'adicionou:',del:'removeu:',reopen:'reabriu:'};
+  const enMsg={done:'marked as done:',add:'added:',del:'removed:',reopen:'reopened:'};
+  const msg=lang==='pt'?ptMsg[type]:enMsg[type];
+  const id='n'+(++notifCount);
+  const el=document.createElement('div');
+  el.className='notif'; el.id=id;
+  el.innerHTML=`<div class="notif-icon ${type}">${icons[type]||'🔔'}</div><div class="notif-body"><div class="notif-who">${esc(who)}</div><div class="notif-msg">${msg} <span class="notif-task">${esc(taskName)}</span></div></div><button class="notif-close" onclick="dismissNotif('${id}')">✕</button>`;
+  document.getElementById('notifStack').appendChild(el);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('show')));
+  setTimeout(()=>dismissNotif(id),5000);
+}
+
+window.dismissNotif = id=>{
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.classList.remove('show');
+  setTimeout(()=>el.remove(),350);
+};
+
+// ── LOGIN ───────────────────────────────────────────────────
+document.getElementById('loading').style.display='none';
+document.getElementById('loginWrap').style.display='flex';
+
+document.getElementById('pinInput').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+
+window.doLogin = ()=>{
+  const nameRaw = document.getElementById('nameInput').value.trim().toLowerCase().replace(/\s/g,'');
+  const pin     = document.getElementById('pinInput').value.trim();
+  const u       = USERS[nameRaw];
+  if(!u || u.pin !== pin){
+    document.getElementById('loginError').style.display='block';
+    return;
+  }
+  document.getElementById('loginError').style.display='none';
+  myUser = u;
+  myKey  = nameRaw;
+  document.getElementById('loginWrap').style.display='none';
+  document.getElementById('topbar').style.display='flex';
+  document.getElementById('mainArea').style.display='block';
+  document.getElementById('userChip').textContent = u.short;
+  startApp();
+};
+
+// ── APP START ───────────────────────────────────────────────
+async function startApp(){
+  // Presence
+  const presRef = ref(db, 'presence/'+myKey);
+  set(presRef, {name: myUser.name, online: true, ts: Date.now()});
+  window.addEventListener('beforeunload',()=>set(presRef,{name:myUser.name,online:false,ts:Date.now()}));
+
+  onValue(ref(db,'presence'), snap=>{
+    const data = snap.val()||{};
+    const others = Object.entries(data).filter(([k,v])=>k!==myKey&&v.online);
+    const row = document.getElementById('presenceRow');
+    const nm  = document.getElementById('presenceName');
+    document.getElementById('statOnline').textContent = 1+others.length;
+    if(others.length){
+      row.style.display='flex';
+      nm.textContent = others.map(([,v])=>v.name).join(', ')+' online';
+    } else {
+      row.style.display='none';
+    }
+  });
+
+  // Listen for notifications from others
+  onValue(ref(db,'notifications'), snap=>{
+    const data=snap.val()||{};
+    Object.values(data).forEach(n=>{
+      if(n.by!==myKey && n.ts > (Date.now()-8000)){
+        showNotif(n.type,n.who,n.taskName);
+      }
+    });
+  });
+
+  // Load / seed tasks
+  onValue(ref(db,'tasks'), snap=>{
+    const data = snap.val();
+    if(!data){
+      // Seed
+      SEEDS.forEach(s=>{
+        const r = push(ref(db,'tasks'));
+        set(r,{...s,done:false,doneBy:null,createdAt:Date.now()});
+      });
+    } else {
+      tasks={};
+      Object.entries(data).forEach(([k,v])=>tasks[k]={...v,id:k});
+      render();
+    }
+  });
+}
+
+// ── NOTIFY ──────────────────────────────────────────────────
+function notify(type,taskName){
+  const r=push(ref(db,'notifications'));
+  set(r,{type,who:myUser.name,by:myKey,taskName,ts:Date.now()});
+  setTimeout(()=>remove(r),10000);
+}
+
+// ── TOGGLE ──────────────────────────────────────────────────
+window.toggleTask = id=>{
+  const t=tasks[id]; if(!t)return;
+  const newDone=!t.done;
+  set(ref(db,'tasks/'+id),{...t,done:newDone,doneBy:newDone?myUser.name:null});
+  notify(newDone?'done':'reopen',t.name);
+  showToast(newDone?(lang==='pt'?'✓ Concluída!':'✓ Done!'):(lang==='pt'?'↺ Reaberta':'↺ Reopened'));
+};
+
+// ── DELETE ──────────────────────────────────────────────────
+window.deleteTask = id=>{
+  const t=tasks[id]; if(!t)return;
+  remove(ref(db,'tasks/'+id));
+  notify('del',t.name);
+  showToast(lang==='pt'?'Removida':'Removed');
+};
+
+// ── ADD ─────────────────────────────────────────────────────
+window.addTask = ()=>{
+  const inp=document.getElementById('addInput');
+  const name=inp.value.trim(); if(!name)return;
+  const cat=document.getElementById('addCat').value;
+  const priority=document.getElementById('addPri').value;
+  const project=document.getElementById('addProject').value;
+  const r=push(ref(db,'tasks'));
+  set(r,{name,cat,priority,project,done:false,doneBy:null,createdAt:Date.now()});
+  notify('add',name);
+  inp.value='';
+  showToast(lang==='pt'?'Tarefa adicionada!':'Task added!');
+};
+
+document.getElementById('addInput').addEventListener('keydown',e=>{if(e.key==='Enter')addTask();});
+
+// ── FILTER ──────────────────────────────────────────────────
+window.setFilter=(f,btn)=>{
+  filter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+};
+
+// ── LANG ────────────────────────────────────────────────────
+window.toggleLang=()=>{
+  lang=lang==='pt'?'en':'pt';
+  applyLang();
+  render();
+};
+
+function applyLang(){
+  const pt=lang==='pt';
+  document.getElementById('loginSub').textContent=pt?'Task Board — Entre para continuar':'Task Board — Sign in to continue';
+  document.getElementById('nameLabel').textContent=pt?'O teu nome':'Your name';
+  document.getElementById('loginBtn').textContent=pt?'Entrar':'Sign in';
+  document.getElementById('addInput').placeholder=pt?'Nova tarefa...':'New task...';
+  document.getElementById('addBtn').textContent=pt?'+ Adicionar':'+ Add';
+  document.getElementById('lblTotal').textContent=pt?'Total':'Total';
+  document.getElementById('lblDone').textContent=pt?'Feitas':'Done';
+  document.getElementById('lblPriority').textContent=pt?'Prioritárias':'Priority';
+  document.getElementById('lblOnline').textContent=pt?'Online':'Online';
+  document.getElementById('lblStatic').textContent=pt?'Estático':'Static';
+  document.getElementById('lblOther').textContent=pt?'Outros':'Other';
+  document.getElementById('fAll').textContent=pt?'Todas':'All';
+  document.getElementById('fPending').textContent=pt?'Por fazer':'Pending';
+  document.getElementById('fDone').textContent=pt?'Feitas':'Done';
+  document.getElementById('fHigh').textContent=pt?'Prioritárias':'Priority';
+  document.querySelectorAll('#addCat option')[1].textContent=pt?'Estático':'Static';
+  document.querySelectorAll('#addCat option')[2].textContent=pt?'Outro':'Other';
+  document.querySelectorAll('#addPri option')[0].textContent=pt?'Prioridade':'Priority';
+}
+
+// ── RENDER ──────────────────────────────────────────────────
+function render(){
+  let arr=Object.values(tasks).sort((a,b)=>{
+    if(a.priority==='high'&&b.priority!=='high')return -1;
+    if(b.priority==='high'&&a.priority!=='high')return 1;
+    return (a.createdAt||0)-(b.createdAt||0);
+  });
+
+  if(filter==='pending') arr=arr.filter(t=>!t.done);
+  if(filter==='done')    arr=arr.filter(t=>t.done);
+  if(filter==='high')    arr=arr.filter(t=>t.priority==='high'&&!t.done);
+
+  const motion=arr.filter(t=>t.cat==='motion');
+  const stat  =arr.filter(t=>t.cat==='static');
+  const other =arr.filter(t=>t.cat==='other');
+
+  renderList(motion,'listMotion','cntMotion','motion');
+  renderList(stat,  'listStatic','cntStatic','static');
+  renderList(other, 'listOther', 'cntOther', 'other');
+
+  document.getElementById('colOther').style.display=other.length?'block':'none';
+
+  // Real counts (unfiltered)
+  const all=Object.values(tasks);
+  document.getElementById('cntMotion').textContent=all.filter(t=>t.cat==='motion').length;
+  document.getElementById('cntStatic').textContent=all.filter(t=>t.cat==='static').length;
+  document.getElementById('cntOther').textContent=all.filter(t=>t.cat==='other').length;
+  document.getElementById('statTotal').textContent=all.length;
+  document.getElementById('statDone').textContent=all.filter(t=>t.done).length;
+  document.getElementById('statPriority').textContent=all.filter(t=>t.priority==='high'&&!t.done).length;
+}
+
+function renderList(items,listId,countId,cat){
+  const el=document.getElementById(listId);
+  if(!items.length){
+    el.innerHTML=`<div class="empty-state">${lang==='pt'?'Sem tarefas.':'No tasks.'}</div>`;
+    return;
+  }
+  el.innerHTML=items.map(t=>`
+    <div class="task-item${t.done?' done':''}" id="item-${t.id}">
+      <div class="task-check${t.done?' checked':''}" onclick="toggleTask('${t.id}')"></div>
+      <div class="task-body">
+        <div class="task-name">${esc(t.name)}</div>
+        <div class="task-meta">
+          <span class="priority-tag ${t.priority}">${t.priority==='high'?(lang==='pt'?'Prioridade':'Priority'):'Normal'}</span>
+          ${t.project?`<span class="done-meta">${esc(t.project)}</span>`:''}
+          ${t.done&&t.doneBy?`<span class="done-meta">✓ ${esc(t.doneBy)}</span>`:''}
+        </div>
+      </div>
+      <button class="task-del" onclick="deleteTask('${t.id}')" title="${lang==='pt'?'Remover':'Delete'}">✕</button>
+    </div>
+  `).join('');
+}
+</script>
+</body>
+</html>
