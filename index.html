@@ -286,7 +286,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, set, onValue, remove, push } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-const firebaseConfig = {
+ firebaseConfig = {
   apiKey: "AIzaSyD4bJhbcWmnDxcv5WdQAFxOKV6LKu0iGpo",
   authDomain: "ken-art-taskboard.firebaseapp.com",
   databaseURL: "https://ken-art-taskboard-default-rtdb.firebaseio.com",
@@ -302,6 +302,7 @@ const db  = getDatabase(app);
 const USERS = {
   'leonardo': { pin:'ken2024',  name:'Leonardo', short:'LB' },
   'supaboy':  { pin:'supa2024', name:'Supa Boy',  short:'SB' },
+  'edmilson': { pin:'edi2024', name:'Edmilson', short:'ED' },
 };
 
 const SEEDS = [
