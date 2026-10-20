@@ -471,6 +471,17 @@ textarea.exp-input{resize:vertical;min-height:58px;}
     </div>
 
     <!-- Invite -->
+    <!-- Projects section -->
+    <div class="manager-section">
+      <div class="manager-header">
+        <div class="manager-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--navy)" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+          <span id="lblProjectsManager">Projectos & Clientes</span>
+        </div>
+      </div>
+      <div class="user-list" id="projectManagerList"></div>
+    </div>
+
     <div class="manager-section">
       <div class="manager-header">
         <div class="manager-title">
@@ -796,13 +807,11 @@ function startListeners(){
   // Projects list from Firebase
   onValue(ref(db,'projects'),snap=>{
     const data=snap.val()||{};
-    const projects=['BIC Color Festival','Ken Art Studios'];
-    Object.values(data).forEach(p=>{if(p.name&&!projects.includes(p.name))projects.push(p.name);});
-    const sel=document.getElementById('addProject');
-    const current=sel.value;
-    sel.innerHTML=projects.map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join('')
-      +`<option value="">Sem projecto</option>`;
-    if(current)sel.value=current;
+    // Store full map with keys for deletion
+    window._fbProjects={};
+    Object.entries(data).forEach(([k,v])=>{window._fbProjects[k]=v;});
+    rebuildProjectDropdown();
+    if(currentPage==='manager')renderManager();
   });
 }
 
@@ -815,6 +824,24 @@ window.openAddProject=()=>{
 window.closeAddProject=()=>{
   document.getElementById('addProjectModal').classList.remove('open');
 };
+
+const DEFAULT_PROJECTS=['BIC Color Festival','Ken Art Studios'];
+
+function rebuildProjectDropdown(){
+  const sel=document.getElementById('addProject');
+  const current=sel.value;
+  const customs=Object.values(window._fbProjects||{}).map(p=>p.name).filter(n=>!DEFAULT_PROJECTS.includes(n));
+  const all=[...DEFAULT_PROJECTS,...customs];
+  sel.innerHTML=all.map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join('')
+    +`<option value="">Sem projecto</option>`;
+  if(current)sel.value=current;
+}
+
+window.removeProject=async key=>{
+  if(!isManager())return;
+  await remove(ref(db,'projects/'+key));
+  showToast(lang==='pt'?'Projecto removido.':'Project removed.');
+};
 window.confirmAddProject=async()=>{
   const name=document.getElementById('addProjectInput').value.trim();
   if(!name)return;
@@ -823,11 +850,11 @@ window.confirmAddProject=async()=>{
   await set(r,{name,createdBy:myKey,createdAt:Date.now()});
   // Select it immediately
   const sel=document.getElementById('addProject');
-  // The onValue listener will update the dropdown, but set it immediately too
-  const opt=document.createElement('option');
-  opt.value=name;opt.textContent=name;
-  sel.insertBefore(opt,sel.lastElementChild);
-  sel.value=name;
+  // Optimistically add to dropdown before Firebase listener fires
+  if(!window._fbProjects)window._fbProjects={};
+  window._fbProjects[r.key]={name,createdBy:myKey,createdAt:Date.now()};
+  rebuildProjectDropdown();
+  document.getElementById('addProject').value=name;
   closeAddProject();
   showToast(lang==='pt'?'Projecto adicionado!':'Project added!');
 };
@@ -881,6 +908,30 @@ function renderManager(){
       </div>
     </div>
   `).join('');
+
+  // Projects
+  const fbProjs=Object.entries(window._fbProjects||{});
+  const allProjs=[
+    ...DEFAULT_PROJECTS.map(n=>({key:null,name:n,isDefault:true})),
+    ...fbProjs.filter(([,v])=>!DEFAULT_PROJECTS.includes(v.name)).map(([k,v])=>({key:k,name:v.name,isDefault:false,createdAt:v.createdAt}))
+  ];
+  document.getElementById('projectManagerList').innerHTML=allProjs.length?allProjs.map(p=>`
+    <div class="user-row">
+      <div style="width:36px;height:36px;border-radius:10px;background:#EEF5FF;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--navy)" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+      </div>
+      <div class="user-info">
+        <div class="user-name">${esc(p.name)}</div>
+        <div class="user-meta">${p.isDefault?(lang==='pt'?'Projecto padrão':'Default project'):(p.createdAt?new Date(p.createdAt).toLocaleDateString():'')}</div>
+      </div>
+      <div class="user-actions">
+        ${p.isDefault
+          ?`<span style="font-size:11px;color:var(--muted);font-weight:600;">${lang==='pt'?'Padrão':'Default'}</span>`
+          :`<button class="ua-btn reject" onclick="removeProject('${p.key}')">${lang==='pt'?'Remover':'Remove'}</button>`
+        }
+      </div>
+    </div>
+  `).join(''):`<div class="empty-state">${lang==='pt'?'Nenhum projecto adicionado ainda.':'No projects added yet.'}</div>`;
 }
 
 window.approveUser=async(k,role)=>{
@@ -1092,6 +1143,7 @@ function applyLang(){
   document.getElementById('fHighLbl').textContent=pt?'Prioritárias':'Priority';
   document.getElementById('fOverdueLbl').textContent=pt?'Atrasadas':'Overdue';
   document.getElementById('lblPendingApprovals').textContent=pt?'Pedidos Pendentes':'Pending Requests';
+  document.getElementById('lblProjectsManager').textContent=pt?'Projectos & Clientes':'Projects & Clients';
   document.getElementById('lblActiveUsers').textContent=pt?'Utilizadores Activos':'Active Users';
   document.getElementById('lblInvite').textContent=pt?'Convidar':'Invite';
   document.getElementById('lblInviteLink').textContent=pt?'Link de convite':'Invite link';
