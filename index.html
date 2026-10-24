@@ -720,12 +720,31 @@ window.doRegister=async()=>{
 };
 
 // ── LAUNCH ───────────────────────────────────────────────────
-function launchApp(){
+async function launchApp(){
+  // Load persisted role overrides for CORE_USERS before anything else
+  try{
+    const snap=await get(ref(db,'coreRoles'));
+    if(snap.exists()){
+      const data=snap.val();
+      Object.entries(data).forEach(([k,v])=>{
+        if(v.role==='removed'){
+          delete CORE_USERS[k];
+        } else if(CORE_USERS[k]&&v.role){
+          CORE_USERS[k].role=v.role;
+        }
+      });
+      // Also update myUser role if it was changed
+      if(myKey&&CORE_USERS[myKey]){
+        myUser.role=CORE_USERS[myKey].role;
+      }
+    }
+  }catch(e){}
+
   document.getElementById('authWrap').style.display='none';
   document.getElementById('topbar').style.display='flex';
   document.getElementById('mainArea').style.display='block';
   document.getElementById('userChip').textContent=myUser.short||'?';
-  if(isManager()){document.getElementById('managerChip').style.display='flex';}
+  if(isManager())document.getElementById('managerChip').style.display='flex';
   if(!isEditor())document.getElementById('addBar')&&(document.getElementById('addBar').style.display='none');
   document.getElementById('inviteLinkInput').value=window.location.href.split('?')[0]+'?invite=1';
   reqNotifPerm();
@@ -751,6 +770,21 @@ function startListeners(){
   onValue(ref(db,'users'),snap=>{
     fbUsers=snap.val()||{};
     rebuildTopbarTabs();
+    if(document.getElementById('managerOverlay').classList.contains('open'))renderManager();
+  });
+
+  // Live core role updates
+  onValue(ref(db,'coreRoles'),snap=>{
+    const data=snap.val()||{};
+    Object.entries(data).forEach(([k,v])=>{
+      if(v.role==='removed'){
+        delete CORE_USERS[k];
+      } else if(CORE_USERS[k]&&v.role){
+        CORE_USERS[k].role=v.role;
+        // Update myUser if it's me
+        if(k===myKey)myUser.role=v.role;
+      }
+    });
     if(document.getElementById('managerOverlay').classList.contains('open'))renderManager();
   });
   onValue(ref(db,'projects'),snap=>{
@@ -1479,8 +1513,10 @@ window.approveUser=async k=>{await set(ref(db,'users/'+k+'/status'),'approved');
 window.rejectUser=async k=>{await set(ref(db,'users/'+k+'/status'),'rejected');showToast(lang==='pt'?'Rejeitado.':'Rejected.');};
 window.changeRole=async(k,role)=>{
   if(CORE_USERS[k]){
-    // Update in-memory for core users — they don't have Firebase entries
     CORE_USERS[k].role=role;
+    // Persist to Firebase so it survives reload
+    const snap=await get(ref(db,'coreRoles/'+k));
+    await set(ref(db,'coreRoles/'+k),{role});
     renderManager();
     showToast(lang==='pt'?'Role actualizado!':'Role updated!');
     return;
@@ -1488,11 +1524,12 @@ window.changeRole=async(k,role)=>{
   await set(ref(db,'users/'+k+'/role'),role);
   showToast(lang==='pt'?'Role actualizado!':'Role updated!');
 };
+
 window.removeUser=async k=>{
   if(k===myKey)return;
   if(CORE_USERS[k]){
-    // For core users, just update the in-memory object to be "inactive"
     delete CORE_USERS[k];
+    await set(ref(db,'coreRoles/'+k),{role:'removed'});
     renderManager();
     showToast(lang==='pt'?'Removido.':'Removed.');
     return;
