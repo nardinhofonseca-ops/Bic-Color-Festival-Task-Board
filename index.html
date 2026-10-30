@@ -25,12 +25,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .topbar{background:var(--navy);padding:0 16px;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;gap:8px;}
 .brand{font-size:15px;font-weight:800;color:#fff;white-space:nowrap;flex-shrink:0;}
 .brand span{color:var(--blue);}
-.topbar-tabs{display:flex;align-items:center;gap:4px;overflow-x:auto;flex:1;padding:0 8px;}
-.topbar-tabs::-webkit-scrollbar{display:none;}
-.proj-tab{border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.65);font-size:12px;font-weight:600;padding:5px 12px;border-radius:20px;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .2s;display:flex;align-items:center;gap:5px;background:rgba(255,255,255,0.08);}
-.proj-tab:hover{background:rgba(255,255,255,0.15);color:#fff;}
-.proj-tab.active{color:#fff;border-color:transparent;}
-.proj-tab .tab-count{background:rgba(255,255,255,0.2);border-radius:20px;padding:1px 6px;font-size:10px;}
 .topbar-right{display:flex;align-items:center;gap:6px;flex-shrink:0;}
 .presence-row{display:none;align-items:center;gap:5px;}
 .presence-dot{width:7px;height:7px;border-radius:50%;background:#22C55E;}
@@ -370,11 +364,11 @@ input:checked+.toggle-slider:before{transform:translateX(16px);}
 
 /* ── MOBILE RESPONSIVE ── */
 @media(max-width:768px){
+  .proj-tab-main{font-size:11px;padding:6px 12px;}
+  #projectTabsRow{margin-left:-2px;}
   /* Topbar */
   .topbar{padding:0 12px;height:50px;}
   .brand{font-size:13px;}
-  .topbar-tabs{padding:0 4px;gap:3px;}
-  .proj-tab{font-size:11px;padding:4px 9px;}
   .topbar-btn span#langLabel{display:none;}
   .topbar-btn{padding:5px 8px;}
   .manager-chip span{display:none;}
@@ -458,9 +452,6 @@ input:checked+.toggle-slider:before{transform:translateX(16px);}
   .stats-bar{gap:4px;}
   .stat{padding:6px 8px;}
   .stat-num{font-size:14px;}
-  .topbar-tabs{display:none;}
-  /* Show active project name instead */
-  .brand::after{content:attr(data-active);font-size:11px;color:var(--lblue);font-weight:500;margin-left:8px;}
 }
 </style>
 </head>
@@ -474,33 +465,33 @@ input:checked+.toggle-slider:before{transform:translateX(16px);}
     <div class="auth-logo">Ken Art <span>Studios</span></div>
     <div class="auth-sub">Task Board</div>
     <div class="auth-tabs">
-      <button class="auth-tab active" id="tabLogin" onclick="switchAuthTab('login')">Entrar</button>
-      <button class="auth-tab" id="tabRegister" onclick="switchAuthTab('register')">Pedir acesso</button>
+      <button class="auth-tab active" id="tabLogin" onclick="switchAuthTab('login')">Sign in</button>
+      <button class="auth-tab" id="tabRegister" onclick="switchAuthTab('register')">Request access</button>
     </div>
     <div id="loginForm">
       <label class="auth-label">Username</label>
       <input class="auth-input" id="loginName" placeholder="ex: leonardo">
       <label class="auth-label">PIN</label>
       <input class="auth-input" id="loginPin" type="password" placeholder="••••">
-      <div class="auth-error" id="loginErr">PIN ou nome incorreto.</div>
-      <button class="auth-btn" onclick="doLogin()">Entrar</button>
+      <div class="auth-error" id="loginErr">Incorrect username or PIN.</div>
+      <button class="auth-btn" onclick="doLogin()">Sign in</button>
     </div>
     <div id="registerForm" style="display:none;">
-      <label class="auth-label">Nome completo</label>
+      <label class="auth-label">Full name</label>
       <input class="auth-input" id="regName" placeholder="ex: Edmilson Silva">
       <label class="auth-label">Username</label>
       <input class="auth-input" id="regKey" placeholder="ex: edmilson">
-      <label class="auth-label">PIN (mín. 4 caracteres)</label>
+      <label class="auth-label">PIN (min. 4 characters)</label>
       <input class="auth-input" id="regPin" type="password" placeholder="••••">
-      <label class="auth-label">Tipo de acesso</label>
+      <label class="auth-label">Access type</label>
       <select class="auth-select" id="regRole">
-        <option value="editor">Editor — Faço parte da equipa</option>
-        <option value="commenter">Commenter — Colaboro e dou feedback</option>
-        <option value="viewer">Viewer — Sou cliente / só acompanho</option>
+        <option value="editor">Editor — I'm part of the team</option>
+        <option value="commenter">Commenter — I collaborate and give feedback</option>
+        <option value="viewer">Viewer — I'm a client / just watching</option>
       </select>
       <div class="auth-error" id="regErr"></div>
       <div class="auth-info" id="regInfo"></div>
-      <button class="auth-btn" onclick="doRegister()">Enviar pedido</button>
+      <button class="auth-btn" onclick="doRegister()">Send request</button>
     </div>
   </div>
 </div>
@@ -508,16 +499,16 @@ input:checked+.toggle-slider:before{transform:translateX(16px);}
 <div class="pending-wrap" id="pendingWrap" style="display:none;">
   <div class="pending-card">
     <div style="font-size:36px;margin-bottom:10px;">⏳</div>
-    <div style="font-size:17px;font-weight:800;color:var(--navy);margin-bottom:8px;">Pedido enviado!</div>
-    <div style="font-size:13px;color:var(--muted);line-height:1.6;">O manager irá dar-te acesso em breve.</div>
-    <button class="auth-btn" style="margin-top:16px;" onclick="location.reload()">Verificar agora</button>
+    <div style="font-size:17px;font-weight:800;color:var(--navy);margin-bottom:8px;">Request sent!</div>
+    <div style="font-size:13px;color:var(--muted);line-height:1.6;">The manager will grant you access shortly.</div>
+    <button class="auth-btn" style="margin-top:16px;" onclick="location.reload()">Check now</button>
   </div>
 </div>
 
 <!-- Topbar -->
 <div class="topbar" id="topbar" style="display:none;">
   <div class="brand">Ken Art <span>Studios</span></div>
-  <div class="topbar-tabs" id="topbarTabs"></div>
+
   <div class="topbar-right">
     <div class="alert-badge" id="alertBadge">
       <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
@@ -547,28 +538,28 @@ input:checked+.toggle-slider:before{transform:translateX(16px);}
       <button class="mp-close" onclick="closeManager()">✕</button>
     </div>
     <div class="mp-section" id="mpPendingSection" style="display:none;">
-      <div class="mp-section-title">⏳ Pedidos Pendentes</div>
+      <div class="mp-section-title">⏳ Pending Requests</div>
       <div id="mpPendingList"></div>
     </div>
     <div class="mp-section">
-      <div class="mp-section-title">👥 Utilizadores</div>
+      <div class="mp-section-title">👥 Users</div>
       <div id="mpUserList"></div>
     </div>
     <div class="mp-section">
-      <div class="mp-section-title">📁 Projectos & Clientes</div>
+      <div class="mp-section-title">📁 Projects & Clients</div>
       <div id="mpProjectList"></div>
     </div>
     <div class="invite-section">
-      <div class="mp-section-title" style="margin-bottom:5px;">✉ Convidar</div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">Link de convite</div>
+      <div class="mp-section-title" style="margin-bottom:5px;">✉ Invite</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">Invite link</div>
       <div class="invite-link-row">
         <input class="invite-link-input" id="inviteLinkInput" readonly>
         <button class="copy-btn" onclick="copyInviteLink()">Copiar</button>
       </div>
-      <div style="text-align:center;font-size:11px;color:var(--muted);margin:7px 0;">— ou por email —</div>
+      <div style="text-align:center;font-size:11px;color:var(--muted);margin:7px 0;">— or by email —</div>
       <div class="invite-email-row">
         <input class="invite-email-input" id="inviteEmailInput" placeholder="email@exemplo.com" type="email">
-        <button class="invite-send-btn" onclick="sendInviteEmail()">Enviar</button>
+        <button class="invite-send-btn" onclick="sendInviteEmail()">Send</button>
       </div>
     </div>
   </div>
@@ -578,32 +569,32 @@ input:checked+.toggle-slider:before{transform:translateX(16px);}
 <div id="projSettingsModal" onclick="closeProjSettingsOutside(event)">
   <div class="ps-card">
     <div class="ps-header">
-      <div class="ps-title" id="psTitle">Definições do Projecto</div>
+      <div class="ps-title" id="psTitle">Project Settings</div>
       <button class="ps-close" onclick="closeProjSettings()">✕</button>
     </div>
     <div class="ps-body">
       <!-- Color -->
       <div class="ps-section">
-        <div class="ps-section-title">Cor do projecto</div>
-        <label class="ps-label">Escolhe uma cor base</label>
+        <div class="ps-section-title">Project color</div>
+        <label class="ps-label">Choose a base color</label>
         <div class="color-grid" id="colorGrid"></div>
       </div>
       <!-- Wallpaper URL -->
       <div class="ps-section">
         <div class="ps-section-title">Wallpaper / Logo</div>
-        <label class="ps-label">URL da imagem de fundo</label>
+        <label class="ps-label">Wallpaper image URL</label>
         <input class="modal-input" id="psWallpaperUrl" placeholder="https://..." style="margin-bottom:8px;">
-        <label class="ps-label">URL do logo</label>
+        <label class="ps-label">Logo URL</label>
         <input class="modal-input" id="psLogoUrl" placeholder="https://..." style="margin-bottom:4px;">
-        <div style="font-size:11px;color:var(--muted);">💡 Firebase Storage para upload directo em breve</div>
+        <div style="font-size:11px;color:var(--muted);">💡 Direct upload via Firebase Storage coming soon</div>
       </div>
       <!-- Access control -->
       <div class="ps-section">
-        <div class="ps-section-title">Acesso ao projecto</div>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Define quem pode ver este projecto. Só tu (Manager) tens sempre acesso.</div>
+        <div class="ps-section-title">Project access</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Define who can see this project. You (Manager) always have access.</div>
         <div id="psAccessList"></div>
       </div>
-      <button class="ps-save-btn" onclick="saveProjSettings()">Guardar definições</button>
+      <button class="ps-save-btn" onclick="saveProjSettings()">Save settings</button>
     </div>
   </div>
 </div>
@@ -611,11 +602,11 @@ input:checked+.toggle-slider:before{transform:translateX(16px);}
 <!-- Add Project Modal -->
 <div id="addProjectModal" onclick="closeAddProjectOutside(event)">
   <div class="modal-card">
-    <div class="modal-title">Novo projecto / cliente</div>
+    <div class="modal-title">New project / client</div>
     <input id="addProjectInput" class="modal-input" placeholder="ex: Moxi Doces, OK Kontact...">
     <div class="modal-row">
-      <button class="modal-btn cancel" onclick="closeAddProject()">Cancelar</button>
-      <button class="modal-btn confirm" onclick="confirmAddProject()">Adicionar</button>
+      <button class="modal-btn cancel" onclick="closeAddProject()">Cancel</button>
+      <button class="modal-btn confirm" onclick="confirmAddProject()">Add</button>
     </div>
   </div>
 </div>
@@ -629,11 +620,23 @@ input:checked+.toggle-slider:before{transform:translateX(16px);}
   </div>
   <div class="stats-bar">
     <div class="stat"><div class="stat-num" id="statTotal">0</div><div class="stat-label">Total</div></div>
-    <div class="stat"><div class="stat-num" id="statDone">0</div><div class="stat-label" id="lblDone">Feitas</div></div>
-    <div class="stat"><div class="stat-num" id="statPriority">0</div><div class="stat-label" id="lblPriority">Prioritárias</div></div>
-    <div class="stat" id="statOverdueCont"><div class="stat-num" id="statOverdue">0</div><div class="stat-label" id="lblOverdue">Atrasadas</div></div>
+    <div class="stat"><div class="stat-num" id="statDone">0</div><div class="stat-label" id="lblDone">Done</div></div>
+    <div class="stat"><div class="stat-num" id="statPriority">0</div><div class="stat-label" id="lblPriority">Priority</div></div>
+    <div class="stat" id="statOverdueCont"><div class="stat-num" id="statOverdue">0</div><div class="stat-label" id="lblOverdue">Overdue</div></div>
     <div class="stat"><div class="stat-num" id="statOnline">1</div><div class="stat-label">Online</div></div>
   </div>
+  <!-- Project tabs -->
+  <div id="projectTabsRow" style="display:flex;align-items:center;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px;-webkit-overflow-scrolling:touch;">
+    <style>
+      #projectTabsRow::-webkit-scrollbar{display:none;}
+      .proj-tab-main{background:var(--surface);border:1.5px solid var(--border);color:var(--muted);font-size:12px;font-weight:600;padding:6px 14px;border-radius:20px;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .2s;display:inline-flex;align-items:center;gap:5px;flex-shrink:0;}
+      .proj-tab-main:hover{border-color:var(--blue);color:var(--navy);}
+      .proj-tab-main.active{color:#fff;border-color:transparent;}
+      .proj-tab-main .tab-count{border-radius:20px;padding:1px 6px;font-size:10px;background:rgba(255,255,255,0.25);}
+      .proj-tab-main:not(.active) .tab-count{background:var(--bg);color:var(--muted);}
+    </style>
+  </div>
+
   <div id="boardContent"></div>
 </div>
 
@@ -644,7 +647,7 @@ input:checked+.toggle-slider:before{transform:translateX(16px);}
     <button class="panel-close" onclick="closePanel()">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </button>
-    <input class="panel-task-name" id="panelTaskName" placeholder="Nome da tarefa...">
+    <input class="panel-task-name" id="panelTaskName" placeholder="Task name...">
     <button class="panel-save-btn" onclick="savePanelName()" id="saveNameBtn">Guardar</button>
   </div>
   <div class="panel-meta-row">
@@ -852,10 +855,10 @@ window.doRegister=async()=>{
   const role=document.getElementById('regRole').value;
   const errEl=document.getElementById('regErr'),infoEl=document.getElementById('regInfo');
   errEl.style.display='none';infoEl.style.display='none';
-  if(!name||!key||pin.length<4){errEl.textContent='Preenche todos os campos correctamente.';errEl.style.display='block';return;}
-  if(CORE_USERS[key]||(await get(ref(db,'users/'+key))).exists()){errEl.textContent='Username já existe.';errEl.style.display='block';return;}
+  if(!name||!key||pin.length<4){errEl.textContent='Please fill in all fields correctly.';errEl.style.display='block';return;}
+  if(CORE_USERS[key]||(await get(ref(db,'users/'+key))).exists()){errEl.textContent='Username already exists.';errEl.style.display='block';return;}
   await set(ref(db,'users/'+key),{name,pin,role,short:name.slice(0,2).toUpperCase(),status:'pending',createdAt:Date.now()});
-  infoEl.textContent='Pedido enviado! Aguarda aprovação.';infoEl.style.display='block';
+  infoEl.textContent='Request sent! Awaiting approval.';infoEl.style.display='block';
   setTimeout(()=>{document.getElementById('authWrap').style.display='none';document.getElementById('pendingWrap').style.display='flex';},1500);
 };
 
@@ -949,25 +952,36 @@ function getVisibleProjects(){
 }
 
 function rebuildTopbarTabs(){
-  const container=document.getElementById('topbarTabs');
+  const container=document.getElementById('projectTabsRow');
+  if(!container)return;
   const visible=getVisibleProjects();
-  const totalAll=Object.values(tasks).filter(t=>visible.includes(t.project)||isManager()).length;
+  const totalAll=Object.values(tasks).filter(t=>isManager()||visible.includes(t.project)).length;
 
-  container.innerHTML=`
-    <button class="proj-tab${activeProject==='all'?' active':''}" onclick="setActiveProject('all')" style="${activeProject==='all'?'background:var(--blue);border-color:var(--blue);':''}">
-      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-      All <span class="tab-count">${totalAll}</span>
-    </button>
-    ${visible.map(p=>{
-      const c=projColor(p);
-      const count=Object.values(tasks).filter(t=>t.project===p).length;
-      const isActive=activeProject===p;
-      return `<button class="proj-tab${isActive?' active':''}" onclick="setActiveProject('${esc(p)}')" style="${isActive?`background:${c};border-color:${c};`:''}">
-        <span style="width:7px;height:7px;border-radius:50%;background:${isActive?'rgba(255,255,255,0.7)':c};flex-shrink:0;display:inline-block;"></span>
-        ${esc(p)} <span class="tab-count">${count}</span>
-      </button>`;
-    }).join('')}
-  `;
+  // Keep the style tag, replace only buttons
+  const style=container.querySelector('style');
+  container.innerHTML='';
+  if(style)container.appendChild(style);
+
+  // All tab
+  const allBtn=document.createElement('button');
+  allBtn.className='proj-tab-main'+(activeProject==='all'?' active':'');
+  if(activeProject==='all')allBtn.style.cssText='background:var(--navy);border-color:var(--navy);';
+  allBtn.innerHTML=`<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg> All <span class="tab-count">${totalAll}</span>`;
+  allBtn.onclick=()=>setActiveProject('all');
+  container.appendChild(allBtn);
+
+  // Project tabs
+  visible.forEach(p=>{
+    const c=projColor(p);
+    const count=Object.values(tasks).filter(t=>t.project===p).length;
+    const isActive=activeProject===p;
+    const btn=document.createElement('button');
+    btn.className='proj-tab-main'+(isActive?' active':'');
+    if(isActive)btn.style.cssText=`background:${c};border-color:${c};`;
+    btn.innerHTML=`<span style="width:7px;height:7px;border-radius:50%;background:${isActive?'rgba(255,255,255,0.8)':c};flex-shrink:0;display:inline-block;"></span> ${esc(p)} <span class="tab-count">${count}</span>`;
+    btn.onclick=()=>setActiveProject(p);
+    container.appendChild(btn);
+  });
 }
 
 window.setActiveProject=proj=>{activeProject=proj;rebuildTopbarTabs();render();updateBrandActive();};
@@ -1467,8 +1481,8 @@ function renderManager(){
       <div class="user-av pending">${esc((u.short||u.name.slice(0,2)).toUpperCase())}</div>
       <div class="user-info"><div class="user-name">${esc(u.name)}</div><div class="user-meta">${esc(k)} · ${u.role}</div></div>
       <div style="display:flex;gap:4px;">
-        <button class="ua-btn approve" onclick="approveUser('${k}')">Aprovar</button>
-        <button class="ua-btn reject" onclick="rejectUser('${k}')">Rejeitar</button>
+        <button class="ua-btn approve" onclick="approveUser('${k}')">Approve</button>
+        <button class="ua-btn reject" onclick="rejectUser('${k}')">Reject</button>
       </div>
     </div>
   `).join('');
@@ -1500,31 +1514,31 @@ function renderManager(){
   document.getElementById('mpProjectList').innerHTML=allProjs.map(p=>`
     <div class="proj-row">
       <div class="proj-icon-box"><span style="width:9px;height:9px;border-radius:50%;background:${projColor(p.name)};display:block;"></span></div>
-      <div class="proj-info"><div class="proj-name-text">${esc(p.name)}</div><div class="proj-sub">${p.isDefault?'Padrão':p.createdAt?new Date(p.createdAt).toLocaleDateString():''}</div></div>
+      <div class="proj-info"><div class="proj-name-text">${esc(p.name)}</div><div class="proj-sub">${p.isDefault?'Default':p.createdAt?new Date(p.createdAt).toLocaleDateString():''}</div></div>
       <div style="display:flex;gap:5px;align-items:center;">
         ${isManager()?`<button class="ua-btn" onclick="openProjSettings('${esc(p.name)}');closeManager();" style="border-color:var(--blue);color:var(--blue);">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/></svg>
         </button>`:''}
-        ${!p.isDefault?`<button class="ua-btn reject" onclick="removeProject('${p.key}')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>`:`<span style="font-size:10px;color:var(--muted);">Padrão</span>`}
+        ${!p.isDefault?`<button class="ua-btn reject" onclick="removeProject('${p.key}')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>`:`<span style="font-size:10px;color:var(--muted);">Default</span>`}
       </div>
     </div>
   `).join('');
 }
 
-window.approveUser=async k=>{await set(ref(db,'users/'+k+'/status'),'approved');showToast('Aprovado!');};
-window.rejectUser=async k=>{await set(ref(db,'users/'+k+'/status'),'rejected');showToast('Rejeitado.');};
+window.approveUser=async k=>{await set(ref(db,'users/'+k+'/status'),'approved');showToast('Approved!');};
+window.rejectUser=async k=>{await set(ref(db,'users/'+k+'/status'),'rejected');showToast('Rejected.');};
 window.changeRole=async(k,role)=>{
   if(CORE_USERS[k]){CORE_USERS[k].role=role;await set(ref(db,'coreRoles/'+k),{role});renderManager();showToast(lang==='pt'?'Role actualizado!':'Role updated!');return;}
   await set(ref(db,'users/'+k+'/role'),role);showToast(lang==='pt'?'Role actualizado!':'Role updated!');
 };
 window.removeUser=async k=>{
   if(k===myKey)return;
-  if(CORE_USERS[k]){delete CORE_USERS[k];await set(ref(db,'coreRoles/'+k),{role:'removed'});renderManager();showToast('Removido.');return;}
-  await remove(ref(db,'users/'+k));showToast('Removido.');
+  if(CORE_USERS[k]){delete CORE_USERS[k];await set(ref(db,'coreRoles/'+k),{role:'removed'});renderManager();showToast('Removed.');return;}
+  await remove(ref(db,'users/'+k));showToast('Removed.');
 };
-window.removeProject=async key=>{await remove(ref(db,'projects/'+key));showToast('Projecto removido.');};
-window.copyInviteLink=()=>{const i=document.getElementById('inviteLinkInput');i.select();navigator.clipboard.writeText(i.value).then(()=>showToast('Link copiado!'));};
-window.sendInviteEmail=()=>{const e=document.getElementById('inviteEmailInput').value.trim();if(!e)return;const l=document.getElementById('inviteLinkInput').value;window.open(`mailto:${e}?subject=Ken Art Studios Task Board&body=${encodeURIComponent(l)}`);document.getElementById('inviteEmailInput').value='';showToast('Email aberto!');};
+window.removeProject=async key=>{await remove(ref(db,'projects/'+key));showToast('Project removed.');};
+window.copyInviteLink=()=>{const i=document.getElementById('inviteLinkInput');i.select();navigator.clipboard.writeText(i.value).then(()=>showToast('Link copied!'));};
+window.sendInviteEmail=()=>{const e=document.getElementById('inviteEmailInput').value.trim();if(!e)return;const l=document.getElementById('inviteLinkInput').value;window.open(`mailto:${e}?subject=Ken Art Studios Task Board&body=${encodeURIComponent(l)}`);document.getElementById('inviteEmailInput').value='';showToast('Email opened!');};
 
 // ── PROJECT MODAL ────────────────────────────────────────────
 window.openAddProject=()=>{document.getElementById('addProjectModal').classList.add('open');const i=document.getElementById('addProjectInput');i.value='';setTimeout(()=>i.focus(),80);};
